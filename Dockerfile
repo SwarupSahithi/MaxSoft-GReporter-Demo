@@ -2,49 +2,28 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    openjdk-11-jdk \
-    maven \
-    curl \
-    wget \
-    gnupg \
-    unzip \
-    libgconf-2-4 \
-    libgtk2.0-0 \
-    libnotify4 \
-    libnss3 \
-    libxss1 \
-    libxtst6 \
-    libasound2 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libgbm1 \
-    libpango1.0-0 \
-    libxshmfence1 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    wget curl unzip gnupg apt-transport-https lsb-release software-properties-common
 
-# Download and install Gauge binary (no zip!)
-RUN wget -q https://github.com/getgauge/gauge/releases/download/v1.5.1/gauge-linux.x86_64 -O /usr/local/bin/gauge && \
-    chmod +x /usr/local/bin/gauge && \
-    gauge install java && \
+# Add Gauge official APT repo
+RUN curl -Ss https://dl.gauge.org/gauge-key.asc | gpg --dearmor -o /usr/share/keyrings/gauge-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/gauge-archive-keyring.gpg] https://dl.gauge.org/deb stable main" | tee /etc/apt/sources.list.d/gauge.list && \
+    apt-get update && \
+    apt-get install -y gauge openjdk-11-jdk maven
+
+# Install Gauge plugins
+RUN gauge install java && \
     gauge install html-report && \
     gauge install screenshot
 
 # Set working directory
 WORKDIR /app
 
-# Copy your Maven project
+# Copy your project
 COPY . .
 
-# Build the project
+# Build project (optional)
 RUN mvn clean compile
 
-# Default command (change if needed)
 CMD ["gauge", "run", "specs"]
