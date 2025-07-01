@@ -9,16 +9,14 @@ COPY . .
 
 # Install dependencies required by Gauge
 RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    wget \
-    gnupg \
-    software-properties-common \
- && curl -sS https://dl.gauge.org/stable | sh \
+    curl unzip wget gnupg software-properties-common \
+ && curl -sS https://dl.gauge.org/stable -o install-gauge.sh \
+ && chmod +x install-gauge.sh && ./install-gauge.sh \
  && gauge install java \
  && gauge install html-report \
  && gauge install screenshot \
  && apt-get clean
+
 
 # Build the Maven project (skip tests if needed)
 RUN mvn clean install -DskipTests
