@@ -7,8 +7,9 @@ RUN apt-get update && apt-get install -y \
  && wget -q https://github.com/getgauge/gauge/releases/download/v1.5.1/gauge-linux.x86_64 \
  && chmod +x gauge-linux.x86_64 \
  && mv gauge-linux.x86_64 /usr/local/bin/gauge \
- && gauge install java \
- && gauge install html-report \
- && gauge install screenshot \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* gauge-linux.x86_64
+
+# Optional: copy your source code and run Maven build
+# COPY . .
+# RUN mvn clean compile
