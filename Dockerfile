@@ -1,29 +1,15 @@
+# Base image
 FROM ubuntu:22.04
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Set DNS resolver to avoid name resolution issues
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y wget gnupg2
+# Install dependencies
+RUN apt-get update && apt-get install -y wget gnupg2 software-properties-common curl
 
-# Add Gauge official APT repo
+# Add Gauge repo
 RUN wget -qO - https://dl.gauge.org/gauge-key.asc | gpg --dearmor -o /usr/share/keyrings/gauge-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/gauge-archive-keyring.gpg] https://dl.gauge.org/deb stable main" \
     | tee /etc/apt/sources.list.d/gauge.list && \
     apt-get update && \
     apt-get install -y gauge openjdk-11-jdk maven
-
-# Install Gauge plugins
-RUN gauge install java && \
-    gauge install html-report && \
-    gauge install screenshot
-
-# Set working directory
-WORKDIR /app
-
-# Copy your project
-COPY . .
-
-# Build project (optional)
-RUN mvn clean compile
-
-CMD ["gauge", "run", "specs"]
