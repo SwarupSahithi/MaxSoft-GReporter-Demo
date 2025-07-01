@@ -1,6 +1,5 @@
 FROM ubuntu:22.04
 
-# Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies
@@ -8,9 +7,9 @@ RUN apt-get update && apt-get install -y \
     openjdk-11-jdk \
     maven \
     curl \
-    unzip \
     wget \
     gnupg \
+    unzip \
     libgconf-2-4 \
     libgtk2.0-0 \
     libnotify4 \
@@ -31,23 +30,20 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Download and install Gauge manually
-RUN wget -q https://github.com/getgauge/gauge/releases/download/v1.5.1/gauge-linux.x86_64.zip && \
-    unzip gauge-linux.x86_64.zip -d gauge && \
-    mv gauge/gauge /usr/local/bin/gauge && \
+# Download and install Gauge binary (no zip!)
+RUN wget -q https://github.com/getgauge/gauge/releases/download/v1.5.1/gauge-linux.x86_64 -O /usr/local/bin/gauge && \
     chmod +x /usr/local/bin/gauge && \
     gauge install java && \
     gauge install html-report && \
-    gauge install screenshot && \
-    rm -rf gauge gauge-linux.x86_64.zip
+    gauge install screenshot
 
 # Set working directory
 WORKDIR /app
 
-# Copy your project files
+# Copy your Maven project
 COPY . .
 
-# Build the Maven project
+# Build the project
 RUN mvn clean compile
 
 # Default command (change if needed)
