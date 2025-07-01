@@ -1,15 +1,16 @@
-FROM maven:3.8.8-eclipse-temurin-11
+FROM ubuntu:22.04
 
+# Set working directory
 WORKDIR /app
 
+# Install required dependencies
 RUN apt-get update && apt-get install -y \
-    curl unzip wget gnupg software-properties-common libgconf-2-4 \
- && wget -q https://github.com/getgauge/gauge/releases/download/v1.5.1/gauge-linux.x86_64 \
- && chmod +x gauge-linux.x86_64 \
- && mv gauge-linux.x86_64 /usr/local/bin/gauge \
+    curl wget unzip gnupg libgconf-2-4 libgtk2.0-0 libnotify4 libnss3 libxss1 libxtst6 \
+    libasound2 libatk1.0-0 libatk-bridge2.0-0 libcups2 libx11-xcb1 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libpango1.0-0 libxshmfence1 \
+ && wget -q https://github.com/getgauge/gauge/releases/download/v1.5.1/gauge-linux.x86_64.zip \
+ && unzip gauge-linux.x86_64.zip -d gauge \
+ && mv gauge/gauge /usr/local/bin/gauge \
+ && chmod +x /usr/local/bin/gauge \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists/* gauge-linux.x86_64
-
-# Optional: copy your source code and run Maven build
-# COPY . .
-# RUN mvn clean compile
+ && rm -rf /var/lib/apt/lists/* gauge gauge-linux.x86_64.zip
+CMD ["gauge", "-v"]
