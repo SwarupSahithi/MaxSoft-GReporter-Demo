@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
  && apt-get clean
 
 
+
 # Build the Maven project (skip tests if needed)
 RUN mvn clean install -DskipTests
 
