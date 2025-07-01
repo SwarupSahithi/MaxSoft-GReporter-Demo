@@ -1,12 +1,9 @@
 # Use Maven with Java 8 base image
 FROM maven:3.8.8-eclipse-temurin-8
-
 # Set the working directory
 WORKDIR /app
-
 # Copy project files
 COPY . .
-
 # Install dependencies required by Gauge
 RUN apt-get update && apt-get install -y \
     curl unzip wget gnupg software-properties-common \
