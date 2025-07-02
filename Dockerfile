@@ -1,15 +1,39 @@
-# Base image
-FROM ubuntu:22.04
+# ── Stage 1: Build with Maven & Gauge CLI ────────────────────────
+FROM maven:3.8.5-openjdk-17 AS builder
+WORKDIR /workspace
 
-# Set DNS resolver to avoid name resolution issues
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
+# Install Gauge CLI prerequisites & plugins
+RUN apt-get update \
+ && apt-get install -y curl unzip gnupg2 ca-certificates \
+ && curl -SsL https://downloads.gauge.org/stable | sh \
+ && gauge install java html-report
 
-# Install dependencies
-RUN apt-get update && apt-get install -y wget gnupg2 software-properties-common curl
+# Copy source, specs, and build
+COPY pom.xml .
+COPY src ./src
+COPY specs ./specs
 
-# Add Gauge repo
-RUN wget -qO - https://dl.gauge.org/gauge-key.asc | gpg --dearmor -o /usr/share/keyrings/gauge-archive-keyring.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/gauge-archive-keyring.gpg] https://dl.gauge.org/deb stable main" \
-    | tee /etc/apt/sources.list.d/gauge.list && \
-    apt-get update && \
-    apt-get install -y gauge openjdk-11-jdk maven
+RUN mvn clean package -DskipTests
+
+# ── Stage 2: Runtime with JRE, Gauge & Appium ───────────────────
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /workspace
+
+# Bring in JAR, specs, and Gauge CLI
+COPY --from=builder /workspace/target/*.jar app.jar
+COPY --from=builder /workspace/specs ./specs
+COPY --from=builder /root/.gauge /root/.gauge
+ENV PATH=/root/.gauge:$PATH
+
+# Install Appium
+RUN apt-get update \
+ && apt-get install -y nodejs npm \
+ && npm install -g appium
+
+EXPOSE 4723 8080
+
+ENTRYPOINT ["bash", "-lc", "\
+  appium & \
+  sleep 5 && \
+  gauge run specs && \
+  java -jar app.jar"]
