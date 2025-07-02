@@ -1,18 +1,21 @@
-# ── Stage 1: Build with Maven & Gauge CLI ────────────────
+# ── Stage 1: Builder ───────────────────────────────────────────
 FROM maven:3.8.5-openjdk-17-slim AS builder
 WORKDIR /workspace
 
-# Install Gauge CLI prerequisites & plugins with apt-get
 RUN apt-get update \
  && apt-get install -y curl unzip gnupg2 ca-certificates \
  && curl -SsL https://downloads.gauge.org/stable | sh \
  && gauge install java html-report
 
-COPY pom.xml src specs ./
-RUN mvn clean package -DskipTests
+# Copy project files including specs
+COPY pom.xml .
+COPY src ./src
+COPY specs ./specs
 
-# ── Stage 2: Runtime with JRE, Gauge & Appium ────────────────
-FROM eclipse-temurin:17-jre-jammy
+RUN ls -la specs && mvn clean package -DskipTests
+
+# ── Stage 2: Runtime ───────────────────────────────────────────
+FROM eclipse-temurin:17-jre-jammy AS runtime
 WORKDIR /workspace
 
 COPY --from=builder /workspace/target/*.jar app.jar
